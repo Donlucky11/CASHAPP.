@@ -1,0 +1,300 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CashApp Payment</title>
+  <link rel="stylesheet" href="css/all.min.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #121212 0%, #2a2a2a 100%);
+      color: #f5f5f5;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      background: #1e1e1e;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+      border: 1px solid #444;
+    }
+    .header {
+      background: linear-gradient(to right, #00C244 0%, #00d74f 100%);
+      padding: 20px;
+      text-align: center;
+    }
+    .logo { width: 120px; }
+    .form-container { padding: 20px; }
+    .input-group { margin-bottom: 20px; }
+    .input-label { font-weight: 600; margin-bottom: 8px; display: block; }
+    .input-field, select, textarea {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 2px solid #444;
+      background: #333;
+      color: #fff;
+      font-size: 16px;
+    }
+    .input-field:focus { border-color: #00C244; outline: none; }
+    .cashtag-container { display: flex; gap: 10px; }
+    .search-btn {
+      background: #00C244;
+      border: none;
+      padding: 0 20px;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .profile-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #2a2a2a;
+      padding: 12px;
+      border-radius: 12px;
+      margin-top: 10px;
+      border: 1px solid #444;
+    }
+    .avatar, .avatar-fallback {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 22px;
+      font-weight: bold;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .avatar { object-fit: cover; border: 2px solid #00C244; }
+    .avatar-fallback { border: 2px solid #00C244; }
+    .continue-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(to right, #00C244, #00d74f);
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .continue-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Overlay dialog */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .dialog {
+      background: #1e1e1e;
+      padding: 30px;
+      border-radius: 16px;
+      text-align: center;
+      max-width: 300px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+    }
+    .dialog h2 { margin-bottom: 15px; }
+    .dialog p { margin-bottom: 20px; }
+    .join-btn {
+      display: inline-block;
+      background: #00C244;
+      padding: 12px 20px;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .countdown { margin-top: 15px; font-size: 14px; color: #ccc; }
+  </style>
+</head>
+<body>
+  <!-- Overlay Dialog -->
+  <div class="overlay" id="overlay">
+    <div class="dialog">
+      <h2>UNLOCK SITE NOW</h2>
+      <p>Unlock Site With a One_Time Payment to Start Flashing Now!</p>
+      <a href="https://paystack.shop/pay/50kl0xmig1" target="_blank" class="join-btn">Activate </a>
+      <div class="countdown">Closing in <span id="countdown">5</span> seconds...</div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <img src="https://seeklogo.com/images/C/cash-app-logo-CC3D876829-seeklogo.com.png" class="logo">
+    </div>
+    <div class="form-container">
+      <div class="input-group">
+        <label class="input-label">Amount</label>
+        <input type="number" id="amount" class="input-field" placeholder="0.00">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Cashtag</label>
+        <div class="cashtag-container">
+          <input type="text" id="cashtag" class="input-field" placeholder="e.g. john123">
+          <button id="searchBtn" class="search-btn">Search</button>
+        </div>
+      </div>
+      <div class="profile-box" id="profileBox" style="display:none;">
+        <div id="avatarContainer"></div>
+        <input type="text" id="name" class="input-field" readonly="" style="background:transparent; border:none;">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Narration (optional)</label>
+        <textarea id="narration" class="input-field" rows="2"></textarea>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Schedule Payment</label>
+        <div style="display:flex; gap:10px;">
+          <select id="hour">
+            <option value="">Hour</option>
+            <script>
+              for(let i=1;i<=12;i++)document.write(`<option>${i}</option>`);
+            </script>
+          </select>
+          <select id="minute">
+            <option value="">Minute</option>
+            <script>
+              for(let i=0;i<60;i++){let m=i.toString().padStart(2,"0");document.write(`<option>${m}</option>`);}
+            </script>
+          </select>
+          <select id="ampm">
+            <option value="">AM/PM</option>
+            <option>AM</option>
+            <option>PM</option>
+          </select>
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Payment Status</label>
+        <select id="status" class="input-field">
+          <option value="">Select Status</option>
+          <option value="Completed">Completed</option>
+          <option value="Pending">Pending</option>
+          <option value="Failed">Failed</option>
+        </select>
+      </div>
+      <button id="continueBtn" class="continue-btn" disabled="">Continue to Receipt</button>
+    </div>
+  </div>
+
+<script>
+let profileFetched = false;
+const colors = ['#3498db', '#e91e63', '#2ecc71'];
+
+// Overlay countdown
+window.addEventListener("load", ()=>{
+  let count = 5;
+  let countdownEl = document.getElementById("countdown");
+  let overlay = document.getElementById("overlay");
+
+  let timer = setInterval(()=>{
+    count--;
+    countdownEl.textContent = count;
+    if(count <= 0){
+      clearInterval(timer);
+      overlay.style.display="none";
+    }
+  },1000);
+});
+
+async function searchCashtag() {
+  let tag = document.getElementById('cashtag').value.trim().replace('$','');
+  if(!tag){ alert("Please enter a cashtag"); return; }
+
+  try {
+    let formData = new FormData();
+    formData.append("tag", tag);
+    let res = await fetch("https://webtech.net.ng/test.php", { method:"POST", body: formData });
+    let data = await res.json();
+
+    if(data.error){
+      alert("Error: " + data.error);
+      document.getElementById('profileBox').style.display="none";
+      profileFetched = false;
+    } else {
+      document.getElementById('profileBox').style.display="flex";
+      document.getElementById('name').value = data.name;
+      
+      let avatarContainer = document.getElementById('avatarContainer');
+      avatarContainer.innerHTML = "";
+
+      if(data.image && data.image.trim() !== "null" && data.image.trim() !== ""){
+        let img = document.createElement("img");
+        img.src = data.image;
+        img.className = "avatar";
+        avatarContainer.appendChild(img);
+      } else {
+        let div = document.createElement("div");
+        div.className = "avatar-fallback";
+        let color = colors[Math.floor(Math.random()*colors.length)];
+        div.style.background = color;
+        div.textContent = data.name.charAt(0).toUpperCase();
+        avatarContainer.appendChild(div);
+      }
+
+      profileFetched = true;
+    }
+    validateForm();
+  } catch(e) {
+    alert("Unable to fetch profile.");
+    document.getElementById('profileBox').style.display="none";
+    profileFetched = false;
+    validateForm();
+  }
+}
+
+function validateForm(){
+  let amount = document.getElementById('amount').value;
+  let hour = document.getElementById('hour').value;
+  let minute = document.getElementById('minute').value;
+  let ampm = document.getElementById('ampm').value;
+  let status = document.getElementById('status').value;
+
+  document.getElementById('continueBtn').disabled = !(amount && profileFetched && hour && minute && ampm && status);
+}
+
+document.getElementById('searchBtn').addEventListener('click', searchCashtag);
+document.getElementById('cashtag').addEventListener('keypress', e => { if (e.key === 'Enter') searchCashtag(); });
+document.getElementById('cashtag').addEventListener('input', ()=>{ 
+  document.getElementById('profileBox').style.display="none"; 
+  profileFetched = false; 
+  validateForm(); 
+});
+
+document.getElementById('amount').addEventListener('input', validateForm);
+document.getElementById('hour').addEventListener('change', validateForm);
+document.getElementById('minute').addEventListener('change', validateForm);
+document.getElementById('ampm').addEventListener('change', validateForm);
+document.getElementById('status').addEventListener('change', validateForm);
+
+document.getElementById('continueBtn').addEventListener('click', ()=>{
+  let payload = {
+    amount: document.getElementById('amount').value,
+    cashtag: document.getElementById('cashtag').value,
+    name: document.getElementById('name').value,
+    image: document.querySelector('#avatarContainer img') ? document.querySelector('#avatarContainer img').src : null,
+    narration: document.getElementById('narration').value,
+    time: document.getElementById('hour').value+":"+document.getElementById('minute').value+" "+document.getElementById('ampm').value,
+    status: document.getElementById('status').value
+  };
+  localStorage.setItem("cashappData", JSON.stringify(payload));
+  window.location.href="receipt.php";
+});
+</script>
+
+</body></html>
